@@ -13,8 +13,6 @@ RSpec.describe "ProductDriveParticipants", type: :request do
         response
       end
 
-      before { create(:product_drive_participant) }
-
       context "html" do
         let(:response_format) { 'html' }
 
@@ -25,6 +23,21 @@ RSpec.describe "ProductDriveParticipants", type: :request do
         let(:response_format) { 'csv' }
 
         it { is_expected.to be_successful }
+
+        context "when exporting the csv items" do
+          let!(:product_drive) { create(:product_drive_participant, organization: organization) }
+
+          it "generates the csv with correct headers" do
+            get product_drive_participants_path(format: response_format)
+
+            csv = <<~CSV
+              Business Name,Contact Name,Phone,Email,Total Items
+              test,Dont test this,123,#{product_drive.attributes["email"]},""
+            CSV
+
+            expect(response.body).to eq(csv)
+          end
+        end
       end
     end
 
